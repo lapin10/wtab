@@ -1,27 +1,14 @@
-<html ng-app='OETL' ng-controller="Controller" data-ng-init="init()">
+<html ng-app='wtab' ng-controller="Controller" data-ng-init="init()">
 <head>
-	<link rel="stylesheet" href="/css/oetl.css" type="text/css"/>
+	<link rel="stylesheet" href="css/wtab.css" type="text/css"/>
 
-	<script src="/js/angular.min.js"></script>
-	<script src="/js/angular-resource.min.js"></script>
-	<script src="/js/oetl.js"></script>
+  <script src="js/jquery-2.2.1.min.js"></script>
+	<script src="js/angular.min.js"></script>
+	<script src="js/angular-resource.min.js"></script>
+	<script src="js/wtab.js"></script>
 </head>
 <body>
 
-<h1>| oetl |</h1>
-
-<div class="main">
-
-  <div ng-show="page == INPUT_PAGE">
-    <p>source: <input type="button" value="ajouter" ng-click="addSource()" ng-disabled="source.length == 0"></p>
-    <textarea cols="200" rows="50" ng-model="source"></textarea>
-  </div>
-
-  <div ng-show="page == EDIT_PIPELINE">
-  	<p><a href="" ng-click="gotoPage(INPUT_PAGE)">modify source</a></p>
-  	EDIT PIPELINE
-  </div>
-
-</div>
+<canvas id="tab" ng-keydown="onKeydown($event)" ng-keyup="onKeyup($event)" ng-keypress="onKeypress($event)"></canvas>
 </body>
 </html>
