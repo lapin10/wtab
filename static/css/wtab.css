@@ -1,0 +1,62 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  font-style: italic;
+  text-align: center;
+  background-color: lightyellow;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 10px;
+}
+
+div.main {
+  padding: 4px;
+}
+
+.accountName:hover {
+  font-weight: bolder;
+  background-color: #F9F9F9;
+  cursor: pointer;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.clickableItem:hover {
+  font-style: italic;
+  cursor: pointer;
+  background-color: #FAFAFA;
+}
+
+table {
+  border: 1px solid black;
+}
+
+tr th {
+  background-color: #EEE;
+  cursor: pointer;
+  border: 1px solid #EEE;
+
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+tr th:hover {
+  background-color: #DDD;
+  cursor: pointer;
+  border: 1px solid black;
+}
+
+.red {
+  color: red;
+}
+
+.tableTitle {
+  font-weight: bolder;
+  margin-bottom: 1px;
+}
