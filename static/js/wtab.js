@@ -26,14 +26,25 @@ var getTextHeight = function(font) {
 };
 
 var tab;
-var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40;
+var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35;
 
 app.controller('Controller', function($scope, $window, Source) {
-	$scope.track = [ { frets : [ 0, -1, -1, 12] }, { frets : [ 3, -1, -1, -1] }, { frets : [ -1, 4, -1, -1] }, { frets : [ -1, 12, 14, 14] }, { frets : [ -1, 12, 0, 14] }];
-	$scope.strings = 4;
+	$scope.strings = 6;
+
+	// attention : avant $scope.track
+	$scope.newColumn = function(){
+		var frets = [];
+		for(var i = 0; i < $scope.strings; i++){
+			frets.push(-1);
+		}
+		return { frets : frets };
+	}
+
+	$scope.track = [ $scope.newColumn() ];
 	$scope.charWidth = 0;
 	$scope.lineHeight = 0;
-	$scope.cursor = { x : 0, y : 2};
+	$scope.cursor = { x : 0, y : 0};
+	$scope.horizontalMode = false;
 
 	$scope.init = function(){
 		tab = document.getElementById('tab');
@@ -81,6 +92,20 @@ app.controller('Controller', function($scope, $window, Source) {
 				$scope.draw();
 			}
 			$event.preventDefault();
+		} else if($event.keyCode == delKey){
+			$scope.deleteDigit($event.ctrlKey);
+			$event.preventDefault();
+		} else if($event.keyCode == insKey){
+			$scope.insertDigit();
+			$event.preventDefault();
+		} else if($event.keyCode == homeKey){
+			$scope.cursor.x = 0;
+			$scope.draw();
+			$event.preventDefault();
+		} else if($event.keyCode == endKey){
+			$scope.cursor.x = $scope.track.length - 1;
+			$scope.draw();
+			$event.preventDefault();
 		}
 	};
 
@@ -90,17 +115,72 @@ app.controller('Controller', function($scope, $window, Source) {
 	};
 
 	$scope.onKeypress = function($event){
+		var ch = String.fromCharCode($event.which);
 		if($event.which >= 48 && $event.which <= 48+9){
 			// is a digit
 			$scope.addDigit($event.which - 48);
+			return;
+		} else if(ch == 'h'){
+			$scope.horizontalMode = true;
+		} else if(ch == 'v'){
+			$scope.horizontalMode = false;
 		}
 	};
 
+	$scope.isEmptyCol = function(note){
+		var frets = $scope.track[note].frets;
+
+		for(var i = 0; i < $scope.strings; i++){
+			if(frets[i] != -1){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	$scope.deleteDigit = function(withCtrl){
+		if(withCtrl){
+			// w/ctrl : destroy !
+			$scope.track.splice($scope.cursor.x, 1);
+			$scope.draw();
+		} else if($scope.track[$scope.cursor.x].frets[$scope.cursor.y] == -1){
+			// already a silence...
+			if($scope.isEmptyCol($scope.cursor.x)){
+				// full silence : destroy !
+				$scope.track.splice($scope.cursor.x, 1);
+				$scope.draw();
+			} 
+		} else {
+			// replace note with silence
+			$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = -1;
+			$scope.draw();
+		}
+	}
+
+	$scope.insertDigit = function(){
+		$scope.track.splice($scope.cursor.x, 0, $scope.newColumn());
+		$scope.draw();
+	}
+
 	$scope.addDigit = function(d){
+		// TOOD : si d == 1 / 2 => mode wait
 		$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = d;
-		$scope.cursor.x ++;
-		if($scope.cursor.x >= $scope.track.length){
-			$scope.track.push({ frets : [-1,-1,-1,-1]}); // TOOD : array size 
+		if($scope.horizontalMode){
+			// horizontal mode
+			$scope.cursor.x ++;
+			if($scope.cursor.x >= $scope.track.length){
+				$scope.track.push($scope.newColumn()); 
+			}
+		} else {
+			// vertical mode
+			$scope.cursor.y --;
+			if($scope.cursor.y < 0){
+				$scope.cursor.x ++;
+				if($scope.cursor.x >= $scope.track.length){
+					$scope.track.push($scope.newColumn()); 
+				}
+				$scope.cursor.y = $scope.strings - 1;
+			}
 		}
 		$scope.draw();
 	}
