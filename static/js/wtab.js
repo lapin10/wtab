@@ -43,12 +43,13 @@ app.controller('Controller', function($scope, $window, Source) {
 	$scope.track = [ $scope.newColumn() ];
 	$scope.charWidth = 0;
 	$scope.lineHeight = 0;
-	$scope.cursor = { x : 0, y : 0};
-	$scope.horizontalMode = false;
+	$scope.cursor = { x : 0, y : $scope.strings - 1 };
+	$scope.horizontalMode = true;
+	$scope.tabFont = '16px bold Arial';
 
 	$scope.init = function(){
 		tab = document.getElementById('tab');
-		tab.font = '16px bold Arial';
+		tab.font = $scope.tabFont; 
 		tab.width = 1000;
 		tab.height = 800;
 		tab.setAttribute('tabindex','0');
@@ -185,13 +186,14 @@ app.controller('Controller', function($scope, $window, Source) {
 		$scope.draw();
 	}
 
+	$scope.style = { bg : '#EEE', tab : '#000', cursor : '#0FF', text : '#000' };
+
 	$scope.draw = function(){
-//		console.log($scope.cursor)
 		var hasFocus = (document.activeElement === this);
 		var ctx = tab.getContext('2d');
 		ctx.font = tab.font;
 		ctx.textBaseline = 'top';
-		ctx.fillStyle = '#EEE';
+		ctx.fillStyle = $scope.style.bg;
 		ctx.fillRect(0, 0, tab.width, tab.height);
 
 		var x0 = $scope.charWidth;
@@ -200,7 +202,7 @@ app.controller('Controller', function($scope, $window, Source) {
 
 		ctx.beginPath();
 		ctx.lineWidth = 1;
-		ctx.strokeStyle = '#000';
+		ctx.strokeStyle = $scope.style.tab;
 		ctx.rect(x0, y0, w, ($scope.strings - 1) * $scope.lineHeight);
 
 		for(var string = 1; string < $scope.strings-1; string++){
@@ -208,7 +210,6 @@ app.controller('Controller', function($scope, $window, Source) {
 			ctx.lineTo(x0 + w, y0 + string * $scope.lineHeight);
 		}
 		ctx.stroke();
-		ctx.fillStyle = '#000';
 		for(var note = 0; note < $scope.track.length; note++){
 			var x = x0 + $scope.charWidth / 2 + note * $scope.noteWidth;
 			var col = $scope.track[note];
@@ -217,17 +218,17 @@ app.controller('Controller', function($scope, $window, Source) {
 				if(fret != -1){
 					var y = y0 + string * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK! 
 					if($scope.cursor.x == note && $scope.cursor.y == string){
-						ctx.fillStyle = '#0FF';
+						ctx.fillStyle = $scope.style.cursor;
 					} else {
-						ctx.fillStyle = '#EEE';
+						ctx.fillStyle = $scope.style.bg;
 					}
 					if(fret > 9){
 						ctx.fillRect(x, y, 2.5 * $scope.charWidth, $scope.lineHeight);
-						ctx.fillStyle = '#000';
+						ctx.fillStyle = $scope.style.text;
 						ctx.fillText(''+fret, x + $scope.charWidth / 4, y);
 					} else {
 						ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
-						ctx.fillStyle = '#000';
+						ctx.fillStyle = $scope.style.text;
 						ctx.fillText(''+fret, x + $scope.charWidth + $scope.charWidth / 4, y);						
 					}
 				}
@@ -235,7 +236,7 @@ app.controller('Controller', function($scope, $window, Source) {
 			if(note == $scope.cursor.x && col.frets[$scope.cursor.y] == -1){
 				// no note under cursor
 				var y = y0 + $scope.cursor.y * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK!
-				ctx.fillStyle = '#0FF';
+				ctx.fillStyle = $scope.style.cursor;
 				ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
 			}
 
