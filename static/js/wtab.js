@@ -29,7 +29,7 @@ var tab;
 var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35;
 
 app.controller('Controller', function($scope, $window, Source) {
-	$scope.strings = 6;
+	$scope.strings = 4;
 
 	// attention : avant $scope.track
 	$scope.newColumn = function(){
@@ -38,6 +38,14 @@ app.controller('Controller', function($scope, $window, Source) {
 			frets.push(-1);
 		}
 		return { frets : frets };
+	}
+
+	$scope.hasTwoLastEmpties = function(){
+		var len = $scope.track.length;
+		if(len < 2){
+			return false;
+		}
+
 	}
 
 	$scope.track = [ $scope.newColumn() ];
@@ -60,38 +68,66 @@ app.controller('Controller', function($scope, $window, Source) {
 		$scope.lineHeight = measures.height;
 		$scope.descent = measures.descent;
 		$scope.ascent = measures.ascent;
-		$scope.draw();
+		$scope.redraw();
 		tab.focus();
+	}
+
+	$scope.cursorLeft = function(){
+		if($scope.cursor.x > 0){
+			$scope.cursor.x--;
+			$scope.redraw();
+		}
+	}
+
+	$scope.cursorRight = function(){
+		if($scope.cursor.x >= $scope.track.length - 1){
+			// already last note, let's add one
+			$scope.track.push($scope.newColumn()); 
+		}
+		$scope.cursor.x++;
+		$scope.redraw();
+	}
+
+	$scope.cursorUp = function(){
+		if($scope.cursor.y > 0){
+			$scope.cursor.y--;
+		} else {
+			$scope.cursor.y = $scope.strings - 1;
+		}
+		$scope.redraw();		
+	}
+
+	$scope.cursorDown = function(){
+		if($scope.cursor.y < $scope.strings - 1){
+			$scope.cursor.y++;
+		} else {
+			$scope.cursor.y = 0;
+		}
+		$scope.redraw();		
+	}
+
+	$scope.home = function(){
+		$scope.cursor.x = 0;
+		$scope.redraw();
+	}
+
+	$scope.end = function(){
+		$scope.cursor.x = $scope.track.length - 1;
+		$scope.redraw();
 	}
 
 	$scope.onKeydown = function($event){
 		if($event.keyCode == upKey){
-			if($scope.cursor.y > 0){
-				$scope.cursor.y--;
-			} else {
-				$scope.cursor.y = $scope.strings - 1;
-			}
-			$scope.draw();
+			$scope.cursorUp();
 			$event.preventDefault();
 		} else if($event.keyCode == leftKey){
-			if($scope.cursor.x > 0){
-				$scope.cursor.x--;
-				$scope.draw();
-			}
+			$scope.cursorLeft();
 			$event.preventDefault();
 		} else if($event.keyCode == downKey){
-			if($scope.cursor.y < $scope.strings - 1){
-				$scope.cursor.y++;
-			} else {
-				$scope.cursor.y = 0;
-			}
-			$scope.draw();			
+			$scope.cursorDown();
 			$event.preventDefault();
 		} else if($event.keyCode == rightKey){
-			if($scope.cursor.x < $scope.track.length - 1){
-				$scope.cursor.x++;
-				$scope.draw();
-			}
+			$scope.cursorRight();
 			$event.preventDefault();
 		} else if($event.keyCode == delKey){
 			$scope.deleteDigit($event.ctrlKey);
@@ -100,19 +136,15 @@ app.controller('Controller', function($scope, $window, Source) {
 			$scope.insertDigit();
 			$event.preventDefault();
 		} else if($event.keyCode == homeKey){
-			$scope.cursor.x = 0;
-			$scope.draw();
+			$scope.home();
 			$event.preventDefault();
 		} else if($event.keyCode == endKey){
-			$scope.cursor.x = $scope.track.length - 1;
-			$scope.draw();
+			$scope.end();
 			$event.preventDefault();
 		}
 	};
 
 	$scope.onKeyup = function($event){
-		//console.log('onKeyup:'+$event.charCode);
-		//console.log($event);
 	};
 
 	$scope.onKeypress = function($event){
@@ -120,13 +152,23 @@ app.controller('Controller', function($scope, $window, Source) {
 		if($event.which >= 48 && $event.which <= 48+9){
 			// is a digit
 			$scope.addDigit($event.which - 48);
-			return;
 		} else if(ch == 'h'){
 			$scope.horizontalMode = true;
 		} else if(ch == 'v'){
 			$scope.horizontalMode = false;
+		} else if(ch == '%'){
+			$scope.copyLastNote();
 		}
 	};
+
+	$scope.copyLastNote = function(){
+		if($scope.cursor.x > 0){
+			for(var i = 0; i < $scope.strings; i++){
+				$scope.track[$scope.cursor.x].frets[i] = $scope.track[$scope.cursor.x - 1].frets[i];
+			}
+			$scope.redraw();
+		}
+	}
 
 	$scope.isEmptyCol = function(note){
 		var frets = $scope.track[note].frets;
@@ -143,24 +185,37 @@ app.controller('Controller', function($scope, $window, Source) {
 		if(withCtrl){
 			// w/ctrl : destroy !
 			$scope.track.splice($scope.cursor.x, 1);
-			$scope.draw();
+			$scope.redraw();
 		} else if($scope.track[$scope.cursor.x].frets[$scope.cursor.y] == -1){
-			// already a silence...
+			// this note is already a silence...
 			if($scope.isEmptyCol($scope.cursor.x)){
 				// full silence : destroy !
-				$scope.track.splice($scope.cursor.x, 1);
-				$scope.draw();
-			} 
+				if($scope.track.length > 1){
+					// need more than one note 
+					$scope.track.splice($scope.cursor.x, 1);
+					if($scope.cursor.x > $scope.track.length - 1){
+						// cursor is on last note, move it back
+						$scope.cursor.x = $scope.track.length - 1;
+					}
+					$scope.redraw();
+				}
+			} else {
+				// silence the nodes
+				for(var i = 0; i < $scope.strings; i++){
+					$scope.track[$scope.cursor.x].frets[i] = -1;
+				}
+				$scope.redraw();
+			}
 		} else {
 			// replace note with silence
 			$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = -1;
-			$scope.draw();
+			$scope.redraw();
 		}
 	}
 
 	$scope.insertDigit = function(){
 		$scope.track.splice($scope.cursor.x, 0, $scope.newColumn());
-		$scope.draw();
+		$scope.redraw();
 	}
 
 	$scope.addDigit = function(d){
@@ -183,12 +238,12 @@ app.controller('Controller', function($scope, $window, Source) {
 				$scope.cursor.y = $scope.strings - 1;
 			}
 		}
-		$scope.draw();
+		$scope.redraw();
 	}
 
-	$scope.style = { bg : '#EEE', tab : '#000', cursor : '#0FF', text : '#000' };
+	$scope.style = { bg : '#FFF', tab : '#000', cursor : '#0FF', text : '#000' };
 
-	$scope.draw = function(){
+	$scope.redraw = function(){
 		var hasFocus = (document.activeElement === this);
 		var ctx = tab.getContext('2d');
 		ctx.font = tab.font;
@@ -200,9 +255,12 @@ app.controller('Controller', function($scope, $window, Source) {
 		var w = tab.width - 2 * $scope.charWidth;
 		var y0 = $scope.lineHeight;
 
+		w = $scope.track.length * $scope.noteWidth + $scope.charWidth;
+
 		ctx.beginPath();
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = $scope.style.tab;
+
 		ctx.rect(x0, y0, w, ($scope.strings - 1) * $scope.lineHeight);
 
 		for(var string = 1; string < $scope.strings-1; string++){
