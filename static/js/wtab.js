@@ -1,7 +1,11 @@
 var app=angular.module('wtab', ['ngResource']);
 
-app.factory('Source', function ($resource) {
-	return $resource("/rest/source");
+app.factory('Songs', function ($resource) {
+	return $resource("/rest/songs");
+});
+
+app.factory('Song', function ($resource) {
+	return $resource("/rest/songs/:song", {song : '@song'});
 });
 
 //ctx.measureText(text).width;
@@ -28,8 +32,27 @@ var getTextHeight = function(font) {
 var tab;
 var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35;
 
-app.controller('Controller', function($scope, $window, Source) {
+app.controller('Controller', function($scope, $window, Songs, Song) {
+	$scope.CHOOSE_SONG_PAGE = '1';
+	$scope.EDIT_SONG_PAGE = '2';
+	$scope.page = $scope.CHOOSE_SONG_PAGE;
+
+	$scope.song = '';
+	$scope.songs = []
 	$scope.strings = 4;
+
+	$scope.editSong = function(song){
+		Song.get({ song : song}, function ready(data){
+			$scope.strings = data.data.strings;
+			$scope.track = data.data.track;
+			console.log($scope.track)
+			$scope.cursor = { x : 0, y : $scope.strings - 1};
+			$scope.page = $scope.EDIT_SONG_PAGE;
+			$scope.song = song;
+			$scope.redraw();
+		});
+
+	}
 
 	// attention : avant $scope.track
 	$scope.newColumn = function(){
@@ -56,6 +79,9 @@ app.controller('Controller', function($scope, $window, Source) {
 	$scope.tabFont = '16px bold Arial';
 
 	$scope.init = function(){
+		Songs.get(function ready(data){
+			$scope.songs = data.data;
+		});
 		tab = document.getElementById('tab');
 		tab.font = $scope.tabFont; 
 		tab.width = 1000;

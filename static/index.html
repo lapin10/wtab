@@ -9,7 +9,19 @@
 </head>
 <body>
 
-<p><label>horizontal mode<input type="checkbox" ng-model="horizontalMode"></label></p>
-<canvas id="tab" ng-keydown="onKeydown($event)" ng-keyup="onKeyup($event)" ng-keypress="onKeypress($event)"></canvas>
+<div ng-show="page == CHOOSE_SONG_PAGE">
+	Songs : 
+	<ul>
+		<li ng-repeat="song in songs">
+			<a href="" ng-click="editSong(song)">{{ song }}</a>
+		</li>
+	</ul>
+</div>
+
+<div ng-show="page == EDIT_SONG_PAGE">
+	<p>editing song <b>{{song}}</b> | <label>horizontal mode<input type="checkbox" ng-model="horizontalMode"></label></p>
+	<canvas id="tab" ng-keydown="onKeydown($event)" ng-keyup="onKeyup($event)" ng-keypress="onKeypress($event)"></canvas>
+</div>
+
 </body>
 </html>
