@@ -1,45 +1,78 @@
 TODO ************
-mouse select 
-1x 2x ! (on hold) 
+
+*** song management ***
+* new song
+* folder
+* rename 
+* backup
+* save as
+* copy 
+* delete
+* attach notes
+* history
+* diff
+* creation / save date
+* track modifications
+* store data : si serveur pas disponible
+* local work : déconnecter tempo / permanent. option : download du local, pour faire un backup
+
+*** UI ***
+- mouse select (hoover effect, select note, select notes)
+- keyboard select
+- on selection/cursor : move horizontal / vertical
+- 1x 2x ! (on hold) 
 	mode 0 : on hold (1/2)
 	mode 1 : a/b = 10/20, 1/2 => 1/2
 	       : ctrl + 1/2 => préfixe
-auto-chord: définir chord, à chaque ajout/modif => ajouter (ex: quarte, octave, power-chord)	       
->> <space> => chord ou pattern (définir à l'avance ou pop-up la première fois)
-	choix déjà tout fait ou définition (ligne simple : x => rien, 0 => root, N => +N)
-	bascule? chord => single
-multi-lignes
-PM, bend, slide, T, H/P
-+12 (octave)
-move up/down (just move OR change string / ex : 7 => 2 ou 7 => 7). single puis groupe
-sélection => action sur sélection (suppress, move, +12, pm, bend, chord)
-key => H/P (définir : H/P ou P/H, intervalle, nombre : 
-	ex: +2/-2 : 15 => 15^17^15
-		+3 : 16 => 16^19
-		-4/+4 : 15 => 15^14^15
-prédef (pattern + intervalle)
-idéal : reccord pattern (multi-string ? like octave), invoke
-		)
+- multi-lignes
+- PM, bend, slide, T, H/P
+- +12 (octave)
+- move up/down (just move OR change string / ex : 7 => 2 ou 7 => 7). single puis groupe
 
-		ex:
-		-----    ---7--
-		-5|-- => -5---|
+*** auto-pattern (powa feature! ) ***
+	sélection => action sur sélection (suppress, move, +12, pm, bend, chord)
+	auto-chord: définir chord, à chaque ajout/modif => ajouter (ex: quarte, octave, power-chord)	       
+	>> <space> => chord ou pattern (définir à l'avance ou pop-up la première fois)
+		choix déjà tout fait ou définition (ligne simple : x => rien, 0 => root, N => +N)
+		bascule? chord => single
+	key => H/P (définir : H/P ou P/H, intervalle, nombre : 
+		ex: +2/-2 : 15 => 15^17^15
+			+3 : 16 => 16^19
+			-4/+4 : 15 => 15^14^15
+	prédef (pattern + intervalle)
+	idéal : reccord pattern (multi-string ? like octave), invoke
+			)
 
-=> auto-pattern (l'appliquer à chaque insert/modif)
+			ex:
+			-----    ---7--
+			-5|-- => -5---|
 
-auto-chord === auto-pattern
+	=> auto-pattern (l'appliquer à chaque insert/modif)
+	auto-chord === auto-pattern
 
-usage : tablette/mobile
+	time pattern (shuffle, gallop, etc)
 
-store data : si serveur pas disponible
-local work : déconnecter tempo / permanent. option : download du local, pour faire un backup
+* usage : tablette/mobile
+
+
 
 store in github
 versionning
 
-auto-save
-save
+manual save : bouton "save" et flag "dirty"
+
 multi-songs
+
+*** export / download as ***
+- html
+- pdf
+- txt
+- guitar pro	
+
+multi-track
+other instruments (drums)
+tuning
+volume / master volume  / replay / ...
 
 LATER ************
 &é"' => 1 2 3 4 ...
@@ -49,6 +82,7 @@ copy last N notes
 
 DONE *************
 (right => add empty)
+auto-save : flag "dirty", après N secondes (déjà implémenté)
 delete current if last => no
 repeat last note(s) %
 draw bar to end of notes only

@@ -42,7 +42,7 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 	$scope.strings = 4;
 
 	$scope.dirty = false;
-	$scope.saveTimerMs = 5000; // save after 5 s
+	$scope.saveTimerMs = 1500; // save after 1.5 s
 	$scope.timer = false;
 
 	$scope.changeSong = function(){
@@ -68,6 +68,7 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		Song.save(song, 
 			function() {
 				console.log('saved !')
+				$scope.dirty = false;
 			},
 			function(error){
 				console.log('NOT saved : '+error)
