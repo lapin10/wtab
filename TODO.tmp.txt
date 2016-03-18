@@ -1,0 +1,66 @@
+TODO ************
+1x 2x ! (on hold) 
+	mode 0 : on hold (1/2)
+	mode 1 : a/b = 10/20, 1/2 => 1/2
+	       : ctrl + 1/2 => préfixe
+auto-chord: définir chord, à chaque ajout/modif => ajouter (ex: quarte, octave, power-chord)	       
+>> <space> => chord ou pattern (définir à l'avance ou pop-up la première fois)
+	choix déjà tout fait ou définition (ligne simple : x => rien, 0 => root, N => +N)
+	bascule? chord => single
+multi-lignes
+PM, bend, slide, T, H/P
++12 (octave)
+move up/down (just move OR change string / ex : 7 => 2 ou 7 => 7). single puis groupe
+sélection => action sur sélection (suppress, move, +12, pm, bend, chord)
+key => H/P (définir : H/P ou P/H, intervalle, nombre : 
+	ex: +2/-2 : 15 => 15^17^15
+		+3 : 16 => 16^19
+		-4/+4 : 15 => 15^14^15
+prédef (pattern + intervalle)
+idéal : record pattern (multi-string ? like octave), invoke
+		)
+
+		ex:
+		-----    ---7--
+		-5|-- => -5---|
+   --2
+=> 0--
+
+   2-
+=> 0-
+
+=> 2-
+   --
+   0-
+
+=> --2-
+   ----
+   0---
+
+=> auto-pattern (l'appliquer à chaque insert/modif)
+
+auto-chord === auto-pattern
+
+usage : tablette/mobile
+
+store data : si serveur pas disponible
+local work : déconnecter tempo / permanent. option : download du local, pour faire un backup
+
+store in github
+versionning
+
+auto-save
+save
+multi-songs
+
+LATER ************
+&é"' => 1 2 3 4 ...
+auto add empty ?
+max = 2 empties at the end
+copy last N notes
+
+DONE *************
+(right => add empty)
+delete current if last => no
+repeat last note(s) %
+draw bar to end of notes only

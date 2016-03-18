@@ -19,8 +19,8 @@
 </div>
 
 <div ng-show="page == EDIT_SONG_PAGE">
-	<p>editing song <b>{{song}}</b> | <label>horizontal mode<input type="checkbox" ng-model="horizontalMode"></label></p>
-	<canvas id="tab" ng-keydown="onKeydown($event)" ng-keyup="onKeyup($event)" ng-keypress="onKeypress($event)"></canvas>
+	<p>editing song <span ng-show="dirty">*</span><b>{{song}}</b> <span ng-show="dirty">*</span>| <label>horizontal mode<input type="checkbox" ng-model="horizontalMode"></label></p>
+	<canvas id="tab" ng-keydown="onKeydown($event)" ng-keyup="onKeyup($event)" ng-keypress="onKeypress($event)" tabindex="1"></canvas>
 </div>
 
 </body>

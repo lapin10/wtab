@@ -16,21 +16,24 @@ def getSongs():
 	songs = os.listdir(APP_CONF)
 	return jsonEncode(dict(data = songs))
 
-@app.route('/songs/<song>', methods=['GET'])
+@app.route('/songs/<song>', methods=['GET', 'POST'])
 def getSong(song):
-	path = os.path.join(APP_CONF, song)
-	if os.path.exists(path):
-		content = file(path, 'rt').read()
-		return jsonEncode(dict(data = jsonDecode(content)))
-	abort(404)
-
-@app.route('/songs/<song>', methods=['POST'])
-def setSong(song):
-	data = request.form.get('data', '')
-	path = os.path.join(APP_CONF, song)
-	with file(path, 'wt') as f:
-		f.write(data)
-	return '{}'
+	if request.method == 'POST':
+		data = request.data
+		print 'got data : %s' % request.data
+		# TOOD : check
+		# d = jsonDecode(data)
+		# print(d)
+		path = os.path.join(APP_CONF, song)
+		with file(path, 'wt') as f:
+			f.write(data)
+		return '{}'
+	else:
+		path = os.path.join(APP_CONF, song)
+		if os.path.exists(path):
+			content = file(path, 'rt').read()
+			return jsonEncode(dict(data = jsonDecode(content)))
+		abort(404)
 
 application = app
 

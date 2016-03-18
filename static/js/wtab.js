@@ -32,7 +32,7 @@ var getTextHeight = function(font) {
 var tab;
 var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35;
 
-app.controller('Controller', function($scope, $window, Songs, Song) {
+app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 	$scope.CHOOSE_SONG_PAGE = '1';
 	$scope.EDIT_SONG_PAGE = '2';
 	$scope.page = $scope.CHOOSE_SONG_PAGE;
@@ -41,11 +41,43 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 	$scope.songs = []
 	$scope.strings = 4;
 
+	$scope.dirty = false;
+	$scope.saveTimerMs = 5000; // save after 5 s
+	$scope.timer = false;
+
+	$scope.changeSong = function(){
+		$scope.dirty = true;
+		$scope.saveSong();
+	}
+
+	$scope.saveSong = function(){
+		if($scope.timer){
+			console.log('cancel previous timer !')
+			$timeout.cancel($scope.timer);
+		} 
+		console.log('schedule save...')
+		$scope.timer = $timeout($scope.doSave, $scope.saveTimerMs);
+	}
+
+	$scope.doSave = function(){
+		var song = new Song(); 
+		song.song = $scope.song;
+		song.strings = $scope.strings;
+		song.track = $scope.track;
+		$scope.timer = false;
+		Song.save(song, 
+			function() {
+				console.log('saved !')
+			},
+			function(error){
+				console.log('NOT saved : '+error)
+			});
+	}
+
 	$scope.editSong = function(song){
 		Song.get({ song : song}, function ready(data){
 			$scope.strings = data.data.strings;
 			$scope.track = data.data.track;
-			console.log($scope.track)
 			$scope.cursor = { x : 0, y : $scope.strings - 1};
 			$scope.page = $scope.EDIT_SONG_PAGE;
 			$scope.song = song;
@@ -86,7 +118,6 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 		tab.font = $scope.tabFont; 
 		tab.width = 1000;
 		tab.height = 800;
-		tab.setAttribute('tabindex','0');
 		ctx = tab.getContext('2d');
 		$scope.charWidth = ctx.measureText('M').width;
 		$scope.noteWidth = 3 * $scope.charWidth;
@@ -193,6 +224,7 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 				$scope.track[$scope.cursor.x].frets[i] = $scope.track[$scope.cursor.x - 1].frets[i];
 			}
 			$scope.redraw();
+			$scope.changeSong();
 		}
 	}
 
@@ -212,6 +244,7 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 			// w/ctrl : destroy !
 			$scope.track.splice($scope.cursor.x, 1);
 			$scope.redraw();
+			$scope.changeSong();
 		} else if($scope.track[$scope.cursor.x].frets[$scope.cursor.y] == -1){
 			// this note is already a silence...
 			if($scope.isEmptyCol($scope.cursor.x)){
@@ -224,6 +257,7 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 						$scope.cursor.x = $scope.track.length - 1;
 					}
 					$scope.redraw();
+					$scope.changeSong();
 				}
 			} else {
 				// silence the nodes
@@ -231,17 +265,20 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 					$scope.track[$scope.cursor.x].frets[i] = -1;
 				}
 				$scope.redraw();
+				$scope.changeSong();
 			}
 		} else {
 			// replace note with silence
 			$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = -1;
 			$scope.redraw();
+			$scope.changeSong();
 		}
 	}
 
 	$scope.insertDigit = function(){
 		$scope.track.splice($scope.cursor.x, 0, $scope.newColumn());
 		$scope.redraw();
+		$scope.changeSong();
 	}
 
 	$scope.addDigit = function(d){
@@ -265,6 +302,7 @@ app.controller('Controller', function($scope, $window, Songs, Song) {
 			}
 		}
 		$scope.redraw();
+		$scope.changeSong();
 	}
 
 	$scope.style = { bg : '#FFF', tab : '#000', cursor : '#0FF', text : '#000' };
