@@ -10,12 +10,23 @@
 <body>
 
 <div ng-show="page == CHOOSE_SONG_PAGE">
-	Songs : 
-	<ul>
-		<li ng-repeat="song in songs">
-			<a href="" ng-click="editSong(song)">{{ song }}</a>
-		</li>
-	</ul>
+	<div ng-show="songs.length > 0">
+		Songs : 
+		<ul>
+			<li ng-repeat="song in songs">
+				<a href="" ng-click="editSong(song)">{{ song }}</a>
+			</li>
+		</ul>
+	</div>
+	<div ng-show="songs.length == 0">
+		Sorry, no song yet!
+	</div>
+	<a href="" ng-click="addSong()">add a new song</a>
+</div>
+
+<div ng-show="page == CREATE_SONG_PAGE">
+	creating a new song named <input type="text" ng-model="newSongName" placeholder="song name" />
+	<input type="button" value="create" ng-show="newSongName.length > 0" ng-click="doCreateSong(newSongName)"/>
 </div>
 
 <div ng-show="page == EDIT_SONG_PAGE">
