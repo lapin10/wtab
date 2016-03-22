@@ -30,7 +30,7 @@ var getTextHeight = function(font) {
 };
 
 var tab;
-var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35;
+var leftKey = 37, upKey = 38, rightKey = 39, downKey = 40, insKey = 45, delKey = 46, homeKey = 36, endKey = 35, bsKey = 8;
 
 app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 	$scope.CHOOSE_SONG_PAGE = '1';
@@ -78,7 +78,7 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		Song.get({ song : song}, function ready(data){
 			$scope.strings = data.data.strings;
 			$scope.track = data.data.track;
-			console.log($scope.track)
+			//console.log($scope.track)
 			$scope.cursor = { x : 0, y : $scope.strings - 1};
 			$scope.page = $scope.EDIT_SONG_PAGE;
 			$scope.song = song;
@@ -107,9 +107,18 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 	$scope.charWidth = 0;
 	$scope.lineHeight = 0;
 	$scope.cursor = { x : 0, y : $scope.strings - 1 };
-	$scope.horizontalMode = true;
+	$scope.HORIZONTAL_MODE = 1;
+	$scope.VERTICAL_MODE = 2;
+	$scope.DIAGONAL_UP_MODE = 3;
+	$scope.DIAGONAL_DOWN_MODE = 4;
+	$scope.PEDAL_MODE = 5;
+	$scope.pedalUp = true;
+	$scope.onHold = false;
+
+	$scope.mode = $scope.HORIZONTAL_MODE;
 	$scope.tabFont = '16px bold Arial';
 	$scope.newSongName = '';
+	$scope.colsPerRow = 1;
 
 	$scope.init = function(){
 		Songs.get(function ready(data){
@@ -117,11 +126,13 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		});
 		tab = document.getElementById('tab');
 		tab.font = $scope.tabFont; 
-		tab.width = 1000;
+		tab.width = 550;
 		tab.height = 800;
 		ctx = tab.getContext('2d');
 		$scope.charWidth = ctx.measureText('M').width;
 		$scope.noteWidth = 3 * $scope.charWidth;
+		// TOOD : on resize too
+		$scope.colsPerRow = ~~((tab.width / $scope.noteWidth) - 1);
 		var measures = getTextHeight(tab.font);
 		$scope.lineHeight = measures.height;
 		$scope.descent = measures.descent;
@@ -160,20 +171,32 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		$scope.redraw();
 	}
 
-	$scope.cursorUp = function(){
-		if($scope.cursor.y > 0){
-			$scope.cursor.y--;
+	$scope.cursorUp = function(shiftKey){
+		if(shiftKey){
+			if($scope.cursor.x - $scope.colsPerRow >= 0){
+				$scope.cursor.x -= $scope.colsPerRow;
+			}
 		} else {
-			$scope.cursor.y = $scope.strings - 1;
+			if($scope.cursor.y > 0){
+				$scope.cursor.y--;
+			} else {
+				$scope.cursor.y = $scope.strings - 1;
+			}
 		}
 		$scope.redraw();		
 	}
 
-	$scope.cursorDown = function(){
-		if($scope.cursor.y < $scope.strings - 1){
-			$scope.cursor.y++;
+	$scope.cursorDown = function(shiftKey){
+		if(shiftKey){
+			if($scope.cursor.x + $scope.colsPerRow <= $scope.track.length - 1){
+				$scope.cursor.x += $scope.colsPerRow;
+			}
 		} else {
-			$scope.cursor.y = 0;
+			if($scope.cursor.y < $scope.strings - 1){
+				$scope.cursor.y++;
+			} else {
+				$scope.cursor.y = 0;
+			}
 		}
 		$scope.redraw();		
 	}
@@ -190,13 +213,13 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 
 	$scope.onKeydown = function($event){
 		if($event.keyCode == upKey){
-			$scope.cursorUp();
+			$scope.cursorUp($event.shiftKey);
 			$event.preventDefault();
 		} else if($event.keyCode == leftKey){
 			$scope.cursorLeft();
 			$event.preventDefault();
 		} else if($event.keyCode == downKey){
-			$scope.cursorDown();
+			$scope.cursorDown($event.shiftKey);
 			$event.preventDefault();
 		} else if($event.keyCode == rightKey){
 			$scope.cursorRight();
@@ -213,6 +236,9 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		} else if($event.keyCode == endKey){
 			$scope.end();
 			$event.preventDefault();
+		} else if($event.keyCode == bsKey){
+			$scope.backspace();
+			$event.preventDefault();
 		}
 	};
 
@@ -223,13 +249,35 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		var ch = String.fromCharCode($event.which);
 		if($event.which >= 48 && $event.which <= 48+9){
 			// is a digit
+			if($scope.onHold){
+				$scope.onHold = false;
+			} else {
+				if($event.which == 49 || $event.which <= 50){
+					$scope.onHold = true;
+				} else {
+					$scope.onHold = false;
+				}
+			}
 			$scope.addDigit($event.which - 48);
 		} else if(ch == 'h'){
-			$scope.horizontalMode = true;
+			$scope.mode = $scope.HORIZONTAL_MODE;
 		} else if(ch == 'v'){
-			$scope.horizontalMode = false;
+			$scope.mode = $scope.HORIZONTAL_VERTICAL;
+		} else if(ch == 'd'){
+			$scope.mode = $scope.DIAGONAL_DOWN_MODE;
+		} else if(ch == 'D'){
+			$scope.mode = $scope.DIAGONAL_UP_MODE;
+		} else if(ch == 'p'){
+			$scope.mode = $scope.PEDAL_MODE;
+			$scope.pedalUp = true;						
 		} else if(ch == '%'){
 			$scope.copyLastNote();
+		} else if(ch == 'a'){
+			$scope.onHold = true;
+			$scope.addDigit(1);
+		} else if(ch == 'b'){
+			$scope.onHold = true;			
+			$scope.addDigit(2);
 		}
 	};
 
@@ -289,6 +337,16 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		}
 	}
 
+	$scope.backspace = function(){
+		if($scope.cursor.x > 0){
+			// need more than one note 
+			$scope.track.splice($scope.cursor.x - 1, 1);
+			$scope.cursor.x -- ;
+			$scope.redraw();
+			$scope.changeSong();
+		}
+	}
+
 	$scope.insertDigit = function(){
 		$scope.track.splice($scope.cursor.x, 0, $scope.newColumn());
 		$scope.redraw();
@@ -297,26 +355,68 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 
 	$scope.addDigit = function(d){
 		// TOOD : si d == 1 / 2 => mode wait
-		$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = d;
-		if($scope.horizontalMode){
-			// horizontal mode
-			$scope.cursor.x ++;
-			if($scope.cursor.x >= $scope.track.length){
-				$scope.track.push($scope.newColumn()); 
-			}
+		if($scope.track[$scope.cursor.x].frets[$scope.cursor.y] != -1){
+			$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = d + $scope.track[$scope.cursor.x].frets[$scope.cursor.y] * 10;
 		} else {
-			// vertical mode
-			$scope.cursor.y --;
-			if($scope.cursor.y < 0){
+			$scope.track[$scope.cursor.x].frets[$scope.cursor.y] = d;
+		}
+		if(!$scope.onHold){
+			if($scope.mode == $scope.HORIZONTAL_MODE){
 				$scope.cursor.x ++;
 				if($scope.cursor.x >= $scope.track.length){
 					$scope.track.push($scope.newColumn()); 
 				}
-				$scope.cursor.y = $scope.strings - 1;
+			} else if($scope.mode == $scope.VERTICAL_MODE){
+				$scope.cursor.y --;
+				if($scope.cursor.y < 0){
+					$scope.cursor.x ++;
+					if($scope.cursor.x >= $scope.track.length){
+						$scope.track.push($scope.newColumn()); 
+					}
+					$scope.cursor.y = $scope.strings - 1;
+				}
+			} else if($scope.mode == $scope.DIAGONAL_UP_MODE){
+				$scope.cursor.y --;
+				$scope.cursor.x ++;
+				if($scope.cursor.x >= $scope.track.length){
+					$scope.track.push($scope.newColumn()); 
+				}			
+				if($scope.cursor.y < 0){
+					$scope.cursor.y = 1;
+					$scope.mode = $scope.DIAGONAL_DOWN_MODE;
+				}			
+			} else if($scope.mode == $scope.DIAGONAL_DOWN_MODE){
+				$scope.cursor.y ++
+				$scope.cursor.x ++;
+				if($scope.cursor.x >= $scope.track.length){
+					$scope.track.push($scope.newColumn()); 
+				}			
+				if($scope.cursor.y > $scope.strings - 1){
+					$scope.cursor.y -= 2;
+					$scope.mode = $scope.DIAGONAL_UP_MODE;
+				}
+			} else if($scope.mode == $scope.PEDAL_MODE){
+				$scope.cursor.x ++;
+				if($scope.cursor.x >= $scope.track.length){
+					$scope.track.push($scope.newColumn()); 
+				}			
+				if($scope.pedalUp){
+					$scope.cursor.y --;
+					if($scope.cursor.y < 0){
+						$scope.cursor.y = $scope.strings - 1;
+					}
+					$scope.pedalUp = false;
+				} else {
+					$scope.cursor.y ++;
+					if($scope.cursor.y > $scope.strings - 1){
+						$scope.cursor.y = 0;
+					}
+					$scope.pedalUp = true;
+				}
 			}
+			$scope.changeSong();
 		}
 		$scope.redraw();
-		$scope.changeSong();
 	}
 
 	$scope.style = { bg : '#FFF', tab : '#000', cursor : '#0FF', text : '#000' };
@@ -329,53 +429,63 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		ctx.fillStyle = $scope.style.bg;
 		ctx.fillRect(0, 0, tab.width, tab.height);
 
-		var x0 = $scope.charWidth;
-		var w = tab.width - 2 * $scope.charWidth;
-		var y0 = $scope.lineHeight;
-
-		w = $scope.track.length * $scope.noteWidth + $scope.charWidth;
-
-		ctx.beginPath();
-		ctx.lineWidth = 1;
-		ctx.strokeStyle = $scope.style.tab;
-
-		ctx.rect(x0, y0, w, ($scope.strings - 1) * $scope.lineHeight);
-
-		for(var string = 1; string < $scope.strings-1; string++){
-			ctx.moveTo(x0, y0 + string * $scope.lineHeight);
-			ctx.lineTo(x0 + w, y0 + string * $scope.lineHeight);
-		}
-		ctx.stroke();
-		for(var note = 0; note < $scope.track.length; note++){
-			var x = x0 + $scope.charWidth / 2 + note * $scope.noteWidth;
-			var col = $scope.track[note];
-			for(var string = 0; string < $scope.strings; string++){
-				var fret = col.frets[string];
-				if(fret != -1){
-					var y = y0 + string * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK! 
-					if($scope.cursor.x == note && $scope.cursor.y == string){
-						ctx.fillStyle = $scope.style.cursor;
-					} else {
-						ctx.fillStyle = $scope.style.bg;
-					}
-					if(fret > 9){
-						ctx.fillRect(x, y, 2.5 * $scope.charWidth, $scope.lineHeight);
-						ctx.fillStyle = $scope.style.text;
-						ctx.fillText(''+fret, x + $scope.charWidth / 4, y);
-					} else {
-						ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
-						ctx.fillStyle = $scope.style.text;
-						ctx.fillText(''+fret, x + $scope.charWidth + $scope.charWidth / 4, y);						
-					}
-				}
-			}			
-			if(note == $scope.cursor.x && col.frets[$scope.cursor.y] == -1){
-				// no note under cursor
-				var y = y0 + $scope.cursor.y * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK!
-				ctx.fillStyle = $scope.style.cursor;
-				ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
+		var numRows = 1;
+		if($scope.track.length > 0){
+			numRows = ~~($scope.track.length / $scope.colsPerRow);
+			if(($scope.track.length % $scope.colsPerRow) > 0){
+				numRows ++;
 			}
+		} 
+		var w = tab.width - 2 * $scope.charWidth;
 
+		for(var row = 0, idx = 0; idx < $scope.track.length; row++, idx += $scope.colsPerRow){
+			var x0 = $scope.charWidth;
+			var y0 = $scope.lineHeight + row * ($scope.strings + 2) * $scope.lineHeight;
+
+			w = Math.min($scope.colsPerRow, $scope.track.length - idx) * $scope.noteWidth + $scope.charWidth;
+
+			ctx.beginPath();
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = $scope.style.tab;
+
+			ctx.rect(x0, y0, w, ($scope.strings - 1) * $scope.lineHeight);
+
+			for(var string = 1; string < $scope.strings-1; string++){
+				ctx.moveTo(x0, y0 + string * $scope.lineHeight);
+				ctx.lineTo(x0 + w, y0 + string * $scope.lineHeight);
+			}
+			ctx.stroke();
+			for(var note = idx; note < $scope.track.length && note < idx + $scope.colsPerRow; note++){
+				var x = x0 + $scope.charWidth / 2 + (note - idx) * $scope.noteWidth;
+				var col = $scope.track[note];
+				for(var string = 0; string < $scope.strings; string++){
+					var fret = col.frets[string];
+					if(fret != -1){
+						var y = y0 + string * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK! 
+						if($scope.cursor.x == note && $scope.cursor.y == string){
+							ctx.fillStyle = $scope.style.cursor;
+						} else {
+							ctx.fillStyle = $scope.style.bg;
+						}
+						if(fret > 9){
+							ctx.fillRect(x, y, 2.5 * $scope.charWidth, $scope.lineHeight);
+							ctx.fillStyle = $scope.style.text;
+							ctx.fillText(''+fret, x + $scope.charWidth / 4, y);
+						} else {
+							ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
+							ctx.fillStyle = $scope.style.text;
+							ctx.fillText(''+fret, x + $scope.charWidth + $scope.charWidth / 4, y);						
+						}
+					}
+				}			
+				if(note == $scope.cursor.x && col.frets[$scope.cursor.y] == -1){
+					// no note under cursor
+					var y = y0 + $scope.cursor.y * $scope.lineHeight - $scope.ascent / 2 - 3; // BOOHHH HACK!
+					ctx.fillStyle = $scope.style.cursor;
+					ctx.fillRect(x + $scope.charWidth, y, 1.5 * $scope.charWidth, $scope.lineHeight);
+				}
+
+			}
 		}
 	}
  });

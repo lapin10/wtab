@@ -17,6 +17,7 @@ TODO ************
 * local work : déconnecter tempo / permanent. option : download du local, pour faire un backup
 
 *** UI ***
+- keyboard : move to new row, same col
 - mouse select (hoover effect, select note, select notes)
 - keyboard select
 - on selection/cursor : move horizontal / vertical
