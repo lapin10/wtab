@@ -66,7 +66,6 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		$scope.timer = false;
 		Song.save(song, 
 			function() {
-				console.log('saved !')
 				$scope.dirty = false;
 			},
 			function(error){
@@ -239,6 +238,28 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 		} else if($event.keyCode == bsKey){
 			$scope.backspace();
 			$event.preventDefault();
+		} else if (( $event.keyCode >= 48 && $event.keyCode <= 57 ) || ( $event.keyCode >= 96 && $event.keyCode <= 105 )){
+			// digit : shifted or not...
+			var digit;
+			if( $event.keyCode >= 96 ) {
+				// keypad
+				digit = $event.keyCode - 96;
+			} else {
+				// digits
+				digit = $event.keyCode - 48;				
+			}
+
+			if($scope.onHold){
+				$scope.onHold = false;
+			} else {
+				if( digit == 1 || digit == 2 ){
+					$scope.onHold = true;
+				} else {
+					$scope.onHold = false;
+				}
+			}
+			$scope.addDigit(digit);
+			$event.preventDefault();
 		}
 	};
 
@@ -247,19 +268,8 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 
 	$scope.onKeypress = function($event){
 		var ch = String.fromCharCode($event.which);
-		if($event.which >= 48 && $event.which <= 48+9){
-			// is a digit
-			if($scope.onHold){
-				$scope.onHold = false;
-			} else {
-				if($event.which == 49 || $event.which <= 50){
-					$scope.onHold = true;
-				} else {
-					$scope.onHold = false;
-				}
-			}
-			$scope.addDigit($event.which - 48);
-		} else if(ch == 'h'){
+
+		if(ch == 'h'){
 			$scope.mode = $scope.HORIZONTAL_MODE;
 		} else if(ch == 'v'){
 			$scope.mode = $scope.HORIZONTAL_VERTICAL;
@@ -272,13 +282,7 @@ app.controller('Controller', function($scope, $window, $timeout, Songs, Song) {
 			$scope.pedalUp = true;						
 		} else if(ch == '%'){
 			$scope.copyLastNote();
-		} else if(ch == 'a'){
-			$scope.onHold = true;
-			$scope.addDigit(1);
-		} else if(ch == 'b'){
-			$scope.onHold = true;			
-			$scope.addDigit(2);
-		}
+		} else console.log('ch = '+ch)
 	};
 
 	$scope.copyLastNote = function(){
